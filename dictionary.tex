@@ -1,0 +1,204 @@
+% Compile with LuaLaTeX only -- the dictionary body is generated at
+% compile time by the Lua engine in dictionary-tools.lua, loaded through
+% the dictionary-tools package. This file holds design and content only.
+\documentclass[10pt,twoside,twocolumn]{article}
+\usepackage{geometry}
+% Mirrored book frame (twoside): the thin 12mm INNER margin sits at
+% the spine and the wide 16mm OUTER margin at the page edge -- so odd
+% (recto) pages have the outer margin on the RIGHT and even (verso)
+% pages have it on the LEFT. Block set slightly high. The 152x220mm
+% text block is unchanged, so pagination is unchanged.
+\geometry{paperwidth=180mm, paperheight=250mm, inner=12mm, outer=16mm, top=12mm, bottom=18mm, headsep=4mm, footskip=8mm}
+
+\usepackage{fontspec}
+\usepackage{microtype}
+\usepackage{graphicx}
+\usepackage{multicol} % two-column prose in the front matter prefaces
+% Languages: Latin main (corpus, back matter, editorial text), French
+% secondary (glosses via \dictfr, the Préface via otherlanguage). Babel
+% supplies the hyphenation patterns and French punctuation spacing.
+\usepackage[french, main=latin]{babel}
+
+% Per-face fallback chains: Lexicon No1 is Latin-only (217 glyphs), so
+% the vendored Gentium supplies Greek, Cyrillic and symbols (e.g. the
+% swung dash) in the matching face; DejaVu Serif stays as last resort.
+\directlua{
+  luaotfload.add_fallback("scriptfallback", {
+    "[fonts/Gentium-Regular.ttf]:mode=node;script=latn;",
+    "DejaVuSerif:mode=node;script=latn;",
+    "DejaVuSans:mode=node;script=latn;"
+  })
+  luaotfload.add_fallback("scriptfallbackit", {
+    "[fonts/Gentium-Italic.ttf]:mode=node;script=latn;",
+    "DejaVuSerif:mode=node;script=latn;",
+    "DejaVuSans:mode=node;script=latn;"
+  })
+  luaotfload.add_fallback("scriptfallbackbf", {
+    "[fonts/Gentium-Bold.ttf]:mode=node;script=latn;",
+    "DejaVuSerif:mode=node;script=latn;",
+    "DejaVuSans:mode=node;script=latn;"
+  })
+  luaotfload.add_fallback("scriptfallbackbi", {
+    "[fonts/Gentium-BoldItalic.ttf]:mode=node;script=latn;",
+    "DejaVuSerif:mode=node;script=latn;",
+    "DejaVuSans:mode=node;script=latn;"
+  })
+}
+
+% Main face: Lexicon No1 (TEFF; commercial, installed system-wide, NOT
+% vendored -- building this document requires it). Weight mapping:
+% Roman A for text, Roman D as the bold, Italic A/D for the italics.
+% The vendored Gentium/Charis (fonts/, see ACKNOWLEDGEMENTS.md for
+% licences) serve as script fallback and IPA face respectively.
+\setmainfont{Lexicon No1 Roman A}[
+  ItalicFont = {Lexicon No1 Italic A},
+  BoldFont = {Lexicon No1 Roman D},
+  BoldItalicFont = {Lexicon No1 Italic D},
+  Ligatures = TeX,
+  UprightFeatures = {RawFeature={fallback=scriptfallback}},
+  ItalicFeatures = {RawFeature={fallback=scriptfallbackit}},
+  BoldFeatures = {RawFeature={fallback=scriptfallbackbf}},
+  BoldItalicFeatures = {RawFeature={fallback=scriptfallbackbi}}]
+
+% Entry macros, running-head marks and the CSV engine
+\usepackage{dictionary-tools}
+% Latin sort folding: quantity-marked vowels collate as their base
+% letter, Æ/Œ interfile as AE/OE (Wagner's own ordering); the combining
+% breve strips. Display text keeps all marks.
+\directlua{
+  dicttools.config.sort_fold = {
+    {"Ā","A"},{"ā","a"},{"Ă","A"},{"ă","a"},
+    {"Ē","E"},{"ē","e"},{"Ĕ","E"},{"ĕ","e"},
+    {"Ī","I"},{"ī","i"},{"Ĭ","I"},{"ĭ","i"},
+    {"Ō","O"},{"ō","o"},{"Ŏ","O"},{"ŏ","o"},
+    {"Ū","U"},{"ū","u"},{"Ŭ","U"},{"ŭ","u"},
+    {"Ȳ","Y"},{"ȳ","y"},
+    {"Æ","AE"},{"æ","ae"},{"Œ","OE"},{"œ","oe"},
+    {"̆",""},{"ᵃ","a"},{"ᵐ","m"},
+    {"1. ",""},{"2. ",""},{"3. ",""},{"* ",""},{"(",""},
+    {"à","a"},{"â","a"},{"é","e"},{"è","e"},{"ê","e"},
+    {"î","i"},{"ï","i"},{"ô","o"},{"Ô","O"},{"ù","u"},{"û","u"},{"ç","c"},
+    % Ignorables, applied LAST: characters absent from sortorder.txt get
+    % rank 1000+byte and sort behind Z, so a space or a terminal mark
+    % pushed 307 phrase lemmas and 17 interjections to the tail of their
+    % cluster ("per se" filed after "pervulgo", "o!" last in O). Deleting
+    % them collates letter by letter. These pairs MUST stay after the
+    % "1. "/"2. "/"3. "/"* " pairs above, which match on their space.
+    {" ",""},{".",""},{":",""},{"!",""},{"?",""},{")",""},
+  }
+}
+% abbreviations table
+\usepackage{dictionary-abbreviations}
+
+% Charis SIL has the richest IPA coverage; use it for transcriptions only
+\newfontfamily\charisipafont{CharisSIL}[
+  Path=./fonts/, Extension=.ttf,
+  UprightFont=*-Regular, BoldFont=*-Bold,
+  ItalicFont=*-Italic, BoldItalicFont=*-BoldItalic]
+\renewcommand{\dictipafont}{\charisipafont}
+
+% Blackletter (textura) for the historic title pages: yfonts' \textgoth
+% (TeX Live, no external font needed). In the gothic font "s:" forces
+% the round s the 1878 original uses (bare medial "s" would print the
+% scribal long s) and "a\kern0pt e" prevents the automatic æ ligature.
+\usepackage{yfonts}
+
+% --- GRID AND TYPOGRAPHY LOCKS ---
+% Entries are set at 8.5pt/10pt (\dictfontsize from dictionary-tools);
+% \flushbottom locks every page to that 10pt baseline grid. The 4mm
+% column gap matches the narrow gutters of the print references.
+\setlength{\columnsep}{4mm}
+\renewcommand{\baselinestretch}{1.0}
+\setlength{\emergencystretch}{2em}
+\setlength{\parskip}{0pt}
+\flushbottom
+% The corpus is dense with abbreviations (Cf., Vulg., part., adj., the
+% small-caps labels): without \frenchspacing every one of them would be
+% followed by an inter-sentence space ~1.6x the interword space, which
+% reads as ragged. Deferred so it wins over babel's own begin-document
+% language selection.
+\AtBeginDocument{\frenchspacing}
+
+% --- DISPLAY HEADINGS ---
+% classicthesis-style: letterspaced lowercase small caps, no bold.
+% Used by the front matter includes and the index heading.
+\newcommand{\ctsection}[1]{%
+  \section*{\normalfont\Large\textls[120]{\scshape\MakeLowercase{#1}}}}
+
+% --- index ---
+% The generated makeindex section is no longer printed (the historic
+% Wagner indexes replace it), but \makeindex stays: the engine still
+% emits \index{...} entries, which would be undefined without it. The
+% unused .idx file is an accepted minor waste.
+\makeindex[options=-q]
+
+% --- RUNNING HEADERS ---
+% Layout is the document's business; the dictword/dictcont marks and
+% \contnote come from dictionary-tools.
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+% Guide words at the header edges, print-dictionary style: the page's
+% first headword flush left, its last flush right. The continuation
+% note follows the first word -- it refers to the entry still open at
+% the top of the page.
+\fancyhead[L]{\small\scshape\FirstMark[page]{dictword}\contnote}
+\fancyhead[R]{\small\scshape\LastMark[page]{dictword}}
+% Page number in the footer at the OUTER edge, mirroring the frame:
+% right on odd (recto) pages, left on even (verso) pages
+\fancyfoot[LE,RO]{\small\thepage}
+% classicthesis idiom: no rule under the running head -- words only
+\renewcommand{\headrulewidth}{0pt}
+
+% here our actual document begins
+% let there be book
+\begin{document}
+\clearpage
+\onecolumn
+\pagenumbering{roman}
+
+% the pages before the actual dictionary
+\include{cover}
+\include{forepage}
+% The two titlepage environments reset the page counter; realign it so
+% the impressum (physical page 3) is folio iii and rectos carry odd
+% roman folios throughout the front matter.
+\setcounter{page}{3}
+\include{copyright}
+\include{thanks}
+\include{foreword}
+% print our abbreviations page
+% The table is a longtable and may span several pages, so \thispagestyle
+% would only affect the first: switch to plain (footer only, like the
+% foreword) and restore fancy once the last table page has shipped out.
+\pagestyle{plain}
+\ctsection{Explications des signes et abréviations}
+\printabbreviations{abbreviations.csv}
+\clearpage
+\pagestyle{fancy}
+\include{notes}
+% build the lexicon from our csv
+% NOTE: \twocolumn performs its own \clearpage; do not add
+% \cleardoublepage before it (the pair would push the corpus one page
+% further, onto a verso). With the current front matter, folio 1 lands
+% on a recto and mirrored-margin parity matches physical parity --
+% re-check if front-matter pages are ever added or removed.
+\twocolumn
+\pagenumbering{arabic}
+\builddictionary{wagner-lat-fra.csv}
+\clearpage
+\raggedbottom % allow underfull vbox in the back matter
+% The three historic indexes of the 1878 edition replace the generated
+% makeindex section. Static running heads per index: clear BOTH
+% guide-word fields (the dictword marks stop updating here and would
+% otherwise show the last dictionary page's words).
+\fancyhead[R]{}
+\fancyhead[L]{\small\scshape index vocum barbararum}
+\input{index-barbararum}
+\clearpage
+\fancyhead[L]{\small\scshape index: forum militare, civile, sacrum}
+\input{index-forum}
+\clearpage
+\fancyhead[L]{\small\scshape index gallico-latinus}
+\input{index-gallico}
+\end{document}
