@@ -1,0 +1,20 @@
+% dictionary-abbreviations.sty
+% Typesetting machinery for the abbreviations table.
+% Pairs with dictionary-abbreviations.lua (the processing engine).
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{dictionary-abbreviations}[2026/07/08 v1.0 Abbreviations table engine]
+
+\RequirePackage{longtable}
+\RequirePackage{array}
+
+% Load the specialized Lua script
+\directlua{dictabbr = require("dictionary-abbreviations")}
+
+% Main command to inject the table. Pass the file path as the argument.
+\newcommand{\printabbreviations}[1]{%
+  \vspace{6pt}
+  \directlua{dictabbr.process_abbreviations_csv("\luaescapestring{#1}")}%
+}
+
+\endinput
+

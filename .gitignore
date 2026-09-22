@@ -1,0 +1,18 @@
+*.aux
+*.*~
+*.log
+*.pdf
+*.idx
+*.ilg
+*.ind
+*.fls
+*.fdb*
+#*.*#
+
+# not distributed: fonts (see README), figures, build output
+fonts/
+figures/
+*.pdf
+*.synctex*
+*.toc
+*.out

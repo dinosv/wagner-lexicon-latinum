@@ -1,0 +1,175 @@
+% dictionary-tools.sty
+% Typesetting machinery for the CSV-driven dictionary. Pairs with
+% dictionary-tools.lua (the engine), which this package loads.
+%
+% CONTRACT: the Lua engine emits \printentry, \dictlabel, \dictfr,
+% \letterheader, \entrydone and \index -- every one of them must stay
+% defined here (\index comes from imakeidx).
+%
+% Division of labour: everything the engine's output depends on lives here;
+% page design (class, geometry, main font, header layout, front matter)
+% stays in the document. The document builds its running heads from the
+% mark machinery provided here: \FirstMark[page]{dictword},
+% \LastMark[page]{dictword} and \contnote.
+%
+% Requires LuaLaTeX and a LaTeX kernel with mark classes (2022+).
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{dictionary-tools}[2026/07/08 v1.0 CSV dictionary engine]
+
+\RequirePackage{xcolor}     % gray IPA brackets in \phonetic
+\RequirePackage{imakeidx}   % the engine emits \index{sortkey@word}
+
+
+% --- LUA ENGINE ---
+% The engine is a proper Lua module found next to the document (kpse
+% searches the working directory). Loading via require keeps the Lua
+% code out of TeX's catcode reach entirely.
+\directlua{dicttools = require("dictionary-tools")}
+
+% Build the dictionary body from a CSV file. \luaescapestring guards the
+% filename on its way into the Lua string literal.
+\newcommand{\builddictionary}[1]{%
+  \directlua{dicttools.process_dictionary_csv("\luaescapestring{#1}")}%
+}
+
+% --- ENGINE CONFIGURATION ---
+% Custom collation alphabet file (default sortorder.txt). If the file is
+% absent, entries keep CSV order and no letter headers are produced.
+\newcommand{\dictsortorderfile}[1]{%
+  \directlua{dicttools.config.sort_order_file = "\luaescapestring{#1}"}}
+
+% --- FONT SIZE / GRID ---
+% All entry material is set at 8.5pt on a 10pt baseline grid (the density
+% of the Oxford/Robert print references). Documents locking their pages to
+% the grid (\flushbottom) should keep headers and display material at
+% multiples of 10pt. \renewcommand to retune.
+\newcommand{\dictfontsize}{\fontsize{8.5pt}{10pt}\selectfont}
+
+% --- RUNNING-HEAD MARK MACHINERY ---
+% Modern kernel mark classes (LaTeX 2022+). Unlike legacy e-TeX \newmarks
+% classes, these are tracked correctly across BOTH columns of a twocolumn
+% page: \FirstMark[page]/\LastMark[page] give the true first/last mark of
+% the whole page, not just of the second column's output cycle.
+\NewMarkClass{dictword}
+
+% Continuation marker: 'dictcont' carries the current headword while an
+% entry is "open" (set by \printentry, cleared by \entrydone). If a page
+% begins with a non-empty dictcont mark inherited from the previous page
+% (\TopMark[page]), that page starts INSIDE a long entry and the running
+% head gains a "(word, cont.)" note -- the classic print-dictionary
+% solution for entries spanning multiple pages.
+\NewMarkClass{dictcont}
+% Emptiness is decided by typesetting the mark into a box and measuring
+% it: \TopMark is not expandable inside \edef, so token-level tests
+% (\ifx / \detokenize) always see the unexpanded command and misfire.
+\newsavebox\contnotebox
+\newcommand{\contnote}{%
+  \sbox\contnotebox{\TopMark[page]{dictcont}}%
+  \ifdim\wd\contnotebox>0pt
+    \ \ (\usebox\contnotebox, cont.)%
+  \fi}
+
+% --- ENTRY MACROS ---
+% Font hook for IPA transcriptions: no-op by default (main font is used).
+% Documents whose main font lacks full IPA coverage point this at a
+% dedicated family, e.g. \renewcommand{\dictipafont}{\charisipafont}.
+\newcommand{\dictipafont}{}
+% Prints nothing (not even empty brackets) when the IPA cell is empty
+\newcommand{\phonetic}[1]{%
+  \if\relax\detokenize{#1}\relax\else{\dictipafont\textcolor[rgb]{0.3,0.3,0.3}{[#1]}}\fi}
+\newcommand{\pos}[1]{{\em #1}}
+% Emits " #2" only when #1 is non-empty, so an empty IPA or POS cell
+% leaves no gap. Same emptiness test as \phonetic above.
+\newcommand{\dictoptfield}[2]{%
+  \if\relax\detokenize{#1}\relax\else\space#2\fi}
+% Element labels (SYN., USUS, TRANSL., ...) in true small caps; the
+% engine passes them lowercased so the whole label sits at small-cap
+% height, print-dictionary style.
+\newcommand{\dictlabel}[1]{\textsc{#1}}
+% French gloss segments (the _.._ markup): italic plus the French
+% language context, so glosses hyphenate with French patterns and get
+% French punctuation spacing. Falls back to plain italic when babel
+% (or its french option) is absent.
+\newcommand{\dictfr}[1]{%
+  \ifcsname languagename\endcsname
+    \textit{\foreignlanguage{french}{#1}}%
+  \else
+    \textit{#1}%
+  \fi}
+
+% The Lua engine emits \index{sortkey@word} itself so the index follows
+% the custom collation -- no indexing happens here.
+% Entries break freely at line level (Oxford/Robert convention; the
+% running-head continuation note orients the reader). Two guards:
+% \clubpenalty forbids a break after the entry's FIRST line, so a headword
+% never sits alone at the bottom of a column; \widowpenalty discourages
+% widows without banning them -- an infinite value would reintroduce grid
+% holes under \flushbottom. Grouped so neither leaks out.
+% The marks are inserted AFTER the headword, i.e. once the paragraph has
+% truly started. \InsertMark is a bare \marks node and does NOT trigger
+% horizontal mode, so placed before \textbf it would still land in the
+% vertical list ahead of the entry's first line -- and since a mark node
+% is non-discardable, the baselineskip glue after it becomes a legal
+% breakpoint: when the entry moves to the next column/page its marks
+% legally stay behind, skewing the running head by one entry/page. In
+% the horizontal list the marks migrate out glued AFTER the entry's
+% first line and can never be separated from it.
+\newcommand{\printentry}[4]{%
+  {\par\dictfontsize
+   \clubpenalty=10000
+   \widowpenalty=1000
+   % \parindent must be zeroed explicitly: the class sets it to 1em, and
+   % that indent applies to the entry's FIRST line, cancelling all but
+   % 2.75pt of the hang -- the headword would barely stand out.
+   % The hang is 1em (about one letter): enough to make the headword
+   % read as flush left against its runovers without opening a channel
+   % of white down the column.
+   \parindent=0pt
+   \hangindent=1em\hangafter=1%
+   \textbf{#1}%
+   \InsertMark{dictword}{#1}% Update header marks
+   \InsertMark{dictcont}{#1}% Entry is now "open" for the continuation note
+   % One space per PRESENT field. Writing the spaces literally would put
+   % two after every headword (the IPA cell is empty in the whole Wagner
+   % corpus) and three when POS is empty as well.
+   \dictoptfield{#2}{\phonetic{#2}}%
+   \dictoptfield{#3}{\pos{#3}}%
+   \space#4\par}%
+}
+
+% Closes an entry. Clearing the dictcont mark records "page top is
+% between entries" so the running head shows no continuation note.
+% The Lua engine injects this INSIDE the entry's final paragraph (last
+% macro argument) so the mark migrates out glued to the last line -- as
+% a stand-alone vertical-mode token it could be pushed to the next page
+% while the entry stays, leaving the entry spuriously "open".
+\newcommand{\entrydone}{\InsertMark{dictcont}{}}
+
+% --- LETTER BLOCK HEADER ---
+% Every letter block begins on a fresh page with the headline letter set
+% flush left above the columns (Robert-style). \twocolumn[...] restarts
+% the page (its internal \clearpage ships the previous block's short last
+% page while \raggedbottom is in force) and typesets its argument across
+% the whole measure, so both columns start at the same height.
+%
+% GRID SAFETY: LaTeX routes the full-width argument through the
+% double-float mechanism (\@topnewpage): the argument box gets
+% \vskip -\dbltextfloatsep appended inside, and the output routine
+% re-adds \vskip \dbltextfloatsep above the columns -- the two cancel,
+% so the columns begin exactly the NATURAL HEIGHT of our content below
+% the text-area top. Fixing that content at 50pt (5 x 10pt) therefore
+% puts every baseline of this page on the same grid as the facing page.
+% The letter sits inside the vbox between \vfil's, so its font metrics
+% cannot leak into the page geometry.
+\newcommand{\letterheader}[1]{%
+  \raggedbottom
+  \twocolumn[{%
+    \vbox to 50pt{%
+      \vfil
+      {\noindent\fontsize{32pt}{32pt}\selectfont #1\par}%
+      \vfil}%
+  }]%
+  \flushbottom
+}
+
+\endinput

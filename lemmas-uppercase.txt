@@ -1,0 +1,84 @@
+=== CORPUS LEMMAS WITH UPPERCASE (64) ===
+1. Jānŭārĭus
+2. Jānŭārĭus
+Ăcădēmĭa
+Ăcădēmĭci
+Adventus Domini
+Agnus DEI
+Alpes
+Ascensio Domini
+Assumptio B. M. Virginis
+Ave Maria recitare
+BENEDICO DEUM
+Catholicus
+Chĭrŏgrăphum
+Christianus
+Christus JESUS
+Circumcisio Domini
+Cœna Domini
+Commūnio Sacra
+Conceptio Immaculata B. M. V.
+Concilium Sacrum Œcumenicum
+Congregatio Mariana
+Congregatio Romana Cardinalium
+Consecro SS. Hostiam
+Corporis Christi festum
+Crux SSᵐᵃ
+DEI consilio
+DEI opem implorare
+DEO favente
+DEUM adorare
+DEUS avertat
+DEUS benedicat
+DEUS res humanas curat
+Diabolus
+Ecclēsĭa
+Elevatio Sacræ Hostiæ
+Euchăristĭa
+Eumĕnĭdus
+Eurīpus
+Ēvangĕlĭa
+Gallus
+Græcĭa
+Græcus
+Hērcŭle!
+Horæ Canonicæ
+In DEUM peccare
+Judicii extremi dies
+Lătīnē
+Lătīnĭtas
+Mars
+Missa
+Mons Calvariæ
+Nativitas Domini
+Ōcĕānus
+Orcus
+Ŏrĭens
+Pallădĭum
+Passio Domini
+Pontus
+Quadraginta horarum preces
+Sīrēnes
+Spiritus Sanctus
+Stōĭcē
+Torquātus
+VÆ! exclamatio doloris
+
+=== GALLICO-LATINUS FRENCH HEADWORDS WITH UPPERCASE (17) ===
+Ascension
+Avent
+Carême
+DIEU
+DIEU a créé l’univers
+docteur de l’Église
+Église
+Fête-DIEU
+Grec
+Hôtel-DIEU
+invoquer DIEU
+Latin
+n’avoir en vue que la gloire de DIEU
+Pâques
+Semaine-sainte
+Vendredi saint
+Vierge
