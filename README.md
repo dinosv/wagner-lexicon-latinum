@@ -12,9 +12,8 @@ takes a couple of minutes; the current edition has 667 pages.
 This repository holds the LaTeX sources and data only. Fonts are not
 included: Lexicon No1 is commercial and must be installed system-wide,
 and Gentium 7.000 and Charis SIL must be downloaded from SIL and placed
-in `fonts/` before building. The title-page device
-(`figures/titlepage-device.jpg` used by `forepage.tex`) and compiled PDFs
-are likewise not distributed.
+in `fonts/` before building. Compiled PDFs are likewise not
+distributed.
 
 `lexicon.csv` remains in the repo as small sample data (English test
 entries pulled from Wiktionary or invented); point

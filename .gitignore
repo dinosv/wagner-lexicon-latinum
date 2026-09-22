@@ -9,9 +9,8 @@
 *.fdb*
 #*.*#
 
-# not distributed: fonts (see README), figures, build output
+# not distributed: fonts (see README), build output
 fonts/
-figures/
 *.pdf
 *.synctex*
 *.toc
