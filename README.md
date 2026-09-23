@@ -7,7 +7,8 @@ layout. Entries live in `wagner-lat-fra.csv` (generated from the source
 by `scripts/wagner2csv.py`) and are parsed at compile time by a Lua CSV
 engine. Abbreviations live in `abbreviations.csv` (generated from the
 source's signs table). Run `lualatex` twice for a full build; each pass
-takes a couple of minutes; the current edition has 667 pages.
+takes a couple of minutes; the current edition has 671 pages. A
+compiled PDF is attached to each release on the public repository.
 
 This repository holds the LaTeX sources and data only. Fonts are not
 included: Lexicon No1 is commercial and must be installed system-wide,
@@ -184,11 +185,11 @@ LaTeX packages (all included in TeX Live / MiKTeX):
 
 Fonts:
 
-- Lexicon No1 (Roman A/D, Italic A/D) --- main text font; commercial
-  (TEFF), not included in this repo --- building requires it installed
+- XCharter (TeX Live package `xcharter`, SIL OFL) --- main text font;
+  earlier editions were set in the commercial Lexicon No1
 - Charis SIL --- main IPA text font (place in `fonts/`, not vendored)
-- Gentium --- vendored fallback for Greek, Cyrillic and symbols missing
-  from Lexicon
+- Gentium --- vendored fallback for Greek, Cyrillic, superscript letters
+  and symbols missing from XCharter
 - DejaVu Serif --- last-resort glyph fallback
 - yfonts (TeX Live package) --- blackletter textura for the historic
   title pages
