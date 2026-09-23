@@ -187,13 +187,17 @@
 
 % the pages before the actual dictionary
 \include{cover}
+% Blank verso behind the half-title so the title page falls on a recto.
+\null\thispagestyle{empty}\clearpage
 \include{forepage}
 % The two titlepage environments reset the page counter; realign it so
-% the impressum (physical page 3) is folio iii and rectos carry odd
+% the impressum (physical page 4) is folio iv and rectos carry odd
 % roman folios throughout the front matter.
-\setcounter{page}{3}
+\setcounter{page}{4}
 \include{copyright}
 \include{thanks}
+% Blank verso behind the acknowledgements so the preface opens on a recto.
+\null\thispagestyle{empty}\clearpage
 \include{foreword}
 % print our abbreviations page
 % The table is a longtable and may span several pages, so \thispagestyle
@@ -206,11 +210,14 @@
 \pagestyle{fancy}
 \include{notes}
 % build the lexicon from our csv
-% NOTE: \twocolumn performs its own \clearpage; do not add
-% \cleardoublepage before it (the pair would push the corpus one page
-% further, onto a verso). With the current front matter, folio 1 lands
-% on a recto and mirrored-margin parity matches physical parity --
-% re-check if front-matter pages are ever added or removed.
+% Folio 1 must land on a recto so mirrored-margin parity matches
+% physical parity. The page counter tracks physical pages here (see the
+% realignment above); after \clearpage it holds the number of the NEXT
+% page, so when that is even (a verso) emit one blank first. \twocolumn
+% performs its own \clearpage; do not add \cleardoublepage (it would
+% carry running heads onto the blank).
+\clearpage
+\ifodd\value{page}\else\null\thispagestyle{empty}\clearpage\fi
 \twocolumn
 \pagenumbering{arabic}
 \builddictionary{wagner-lat-fra.csv}
