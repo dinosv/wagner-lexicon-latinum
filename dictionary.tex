@@ -19,9 +19,10 @@
 % supplies the hyphenation patterns and French punctuation spacing.
 \usepackage[french, main=latin]{babel}
 
-% Per-face fallback chains: Lexicon No1 is Latin-only (217 glyphs), so
-% the vendored Gentium supplies Greek, Cyrillic and symbols (e.g. the
-% swung dash) in the matching face; DejaVu Serif stays as last resort.
+% Per-face fallback chains: XCharter is Latin-only, so the vendored
+% Gentium supplies Greek, Cyrillic, superscript letters and symbols
+% (e.g. the swung dash) in the matching face; DejaVu Serif stays as
+% last resort.
 \directlua{
   luaotfload.add_fallback("scriptfallback", {
     "[fonts/Gentium-Regular.ttf]:mode=node;script=latn;",
@@ -45,15 +46,19 @@
   })
 }
 
-% Main face: Lexicon No1 (TEFF; commercial, installed system-wide, NOT
-% vendored -- building this document requires it). Weight mapping:
-% Roman A for text, Roman D as the bold, Italic A/D for the italics.
-% The vendored Gentium/Charis (fonts/, see ACKNOWLEDGEMENTS.md for
-% licences) serve as script fallback and IPA face respectively.
-\setmainfont{Lexicon No1 Roman A}[
-  ItalicFont = {Lexicon No1 Italic A},
-  BoldFont = {Lexicon No1 Roman D},
-  BoldItalicFont = {Lexicon No1 Italic D},
+% Main face: XCharter (Matthew Carter's Bitstream Charter, extended by
+% Michael Sharpe; SIL OFL, shipped with TeX Live, so no vendoring). A
+% sturdy, economical face built for reference setting, the nearest open
+% relative of Lexicon No1 (used in earlier editions and still selectable
+% by swapping this block back). Charis SIL (fonts/) is a sibling design,
+% so the IPA runs match. Gentium (fonts/) supplies Greek, superscript
+% letters and symbols XCharter lacks; DejaVu stays as last resort.
+\setmainfont{XCharter}[
+  UprightFont = *-Roman,
+  ItalicFont = *-Italic,
+  BoldFont = *-Bold,
+  BoldItalicFont = *-BoldItalic,
+  Extension = .otf,
   Ligatures = TeX,
   UprightFeatures = {RawFeature={fallback=scriptfallback}},
   ItalicFeatures = {RawFeature={fallback=scriptfallbackit}},
