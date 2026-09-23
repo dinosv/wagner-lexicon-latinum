@@ -19,10 +19,10 @@
 % supplies the hyphenation patterns and French punctuation spacing.
 \usepackage[french, main=latin]{babel}
 
-% Per-face fallback chains: XCharter is Latin-only, so the vendored
-% Gentium supplies Greek, Cyrillic, superscript letters and symbols
-% (e.g. the swung dash) in the matching face; DejaVu Serif stays as
-% last resort.
+% Per-face fallback chains: the main face is Latin-only either way, so
+% the vendored Gentium supplies Greek, Cyrillic, superscript letters
+% and symbols (e.g. the swung dash) in the matching face; DejaVu Serif
+% stays as last resort.
 \directlua{
   luaotfload.add_fallback("scriptfallback", {
     "[fonts/Gentium-Regular.ttf]:mode=node;script=latn;",
@@ -46,24 +46,47 @@
   })
 }
 
-% Main face: XCharter (Matthew Carter's Bitstream Charter, extended by
-% Michael Sharpe; SIL OFL, shipped with TeX Live, so no vendoring). A
-% sturdy, economical face built for reference setting, the nearest open
-% relative of Lexicon No1 (used in earlier editions and still selectable
-% by swapping this block back). Charis SIL (fonts/) is a sibling design,
-% so the IPA runs match. Gentium (fonts/) supplies Greek, superscript
-% letters and symbols XCharter lacks; DejaVu stays as last resort.
-\setmainfont{XCharter}[
-  UprightFont = *-Roman,
-  ItalicFont = *-Italic,
-  BoldFont = *-Bold,
-  BoldItalicFont = *-BoldItalic,
-  Extension = .otf,
-  Ligatures = TeX,
-  UprightFeatures = {RawFeature={fallback=scriptfallback}},
-  ItalicFeatures = {RawFeature={fallback=scriptfallbackit}},
-  BoldFeatures = {RawFeature={fallback=scriptfallbackbf}},
-  BoldItalicFeatures = {RawFeature={fallback=scriptfallbackbi}}]
+% Main face: Lexicon No1 (TEFF; commercial, installed system-wide,
+% NOT vendored) when the build system has it, otherwise XCharter
+% (Matthew Carter's Bitstream Charter extended by Michael Sharpe; SIL
+% OFL, shipped with TeX Live). XCharter is the nearest open relative:
+% sturdy and economical, and a sibling of the Charis SIL used for IPA.
+% Defining \publicfonts before \input forces XCharter regardless, which
+% scripts/publish-public.sh does so the distributed PDF never embeds
+% Lexicon. \dictmainface names the face in use for the colophon.
+% Gentium (fonts/) supplies Greek, superscript letters and symbols
+% either face lacks; DejaVu stays as last resort.
+\ifdefined\publicfonts
+  \def\dictuselexicon{0}
+\else
+  \IfFontExistsTF{Lexicon No1 Roman A}
+    {\def\dictuselexicon{1}}{\def\dictuselexicon{0}}
+\fi
+\ifnum\dictuselexicon=1
+  \newcommand{\dictmainface}{Lexicon No1}
+  \setmainfont{Lexicon No1 Roman A}[
+    ItalicFont = {Lexicon No1 Italic A},
+    BoldFont = {Lexicon No1 Roman D},
+    BoldItalicFont = {Lexicon No1 Italic D},
+    Ligatures = TeX,
+    UprightFeatures = {RawFeature={fallback=scriptfallback}},
+    ItalicFeatures = {RawFeature={fallback=scriptfallbackit}},
+    BoldFeatures = {RawFeature={fallback=scriptfallbackbf}},
+    BoldItalicFeatures = {RawFeature={fallback=scriptfallbackbi}}]
+\else
+  \newcommand{\dictmainface}{XCharter}
+  \setmainfont{XCharter}[
+    UprightFont = *-Roman,
+    ItalicFont = *-Italic,
+    BoldFont = *-Bold,
+    BoldItalicFont = *-BoldItalic,
+    Extension = .otf,
+    Ligatures = TeX,
+    UprightFeatures = {RawFeature={fallback=scriptfallback}},
+    ItalicFeatures = {RawFeature={fallback=scriptfallbackit}},
+    BoldFeatures = {RawFeature={fallback=scriptfallbackbf}},
+    BoldItalicFeatures = {RawFeature={fallback=scriptfallbackbi}}]
+\fi
 
 % Entry macros, running-head marks and the CSV engine
 \usepackage{dictionary-tools}
