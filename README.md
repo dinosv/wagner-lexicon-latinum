@@ -7,14 +7,16 @@ layout. Entries live in `wagner-lat-fra.csv` (generated from the source
 by `scripts/wagner2csv.py`) and are parsed at compile time by a Lua CSV
 engine. Abbreviations live in `abbreviations.csv` (generated from the
 source's signs table). Run `lualatex` twice for a full build; each pass
-takes a couple of minutes; the current edition has 671 pages. A
-compiled PDF is attached to each release on the public repository.
+takes a couple of minutes; the current edition runs to about 670
+pages. The main face is Lexicon No1 when it is installed and XCharter
+otherwise; `scripts/publish-public.sh` builds the XCharter edition and
+publishes it as `dictionary.pdf` on the public repository.
 
 This repository holds the LaTeX sources and data only. Fonts are not
 included: Lexicon No1 is commercial and must be installed system-wide,
 and Gentium 7.000 and Charis SIL must be downloaded from SIL and placed
-in `fonts/` before building. Compiled PDFs are likewise not
-distributed.
+in `fonts/` before building. Without Lexicon No1 the build falls back
+to XCharter, which is what the distributed `dictionary.pdf` uses.
 
 `lexicon.csv` remains in the repo as small sample data (English test
 entries pulled from Wiktionary or invented); point
@@ -185,8 +187,11 @@ LaTeX packages (all included in TeX Live / MiKTeX):
 
 Fonts:
 
-- XCharter (TeX Live package `xcharter`, SIL OFL) --- main text font;
-  earlier editions were set in the commercial Lexicon No1
+- Lexicon No1 (Roman A/D, Italic A/D) --- main text font when
+  installed; commercial (TEFF), not included in this repo
+- XCharter (TeX Live package `xcharter`, SIL OFL) --- main text font
+  otherwise, and always for the published PDF (define `\publicfonts`
+  before `\input{dictionary}` to force it)
 - Charis SIL --- main IPA text font (place in `fonts/`, not vendored)
 - Gentium --- vendored fallback for Greek, Cyrillic, superscript letters
   and symbols missing from XCharter

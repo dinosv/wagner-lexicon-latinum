@@ -24,7 +24,7 @@ Wiktionary content is available under the [Creative Commons Attribution-ShareAli
 
 ## Fonts
 
-The main text face is [XCharter](https://ctan.org/pkg/xcharter), Michael Sharpe's extension of Matthew Carter's Bitstream Charter, released under the SIL Open Font License, Version 1.1, and shipped with TeX Live. Earlier editions were set in [Lexicon No1](https://www.teff.nl/fonts/lexicon/) by Bram de Does (The Enschedé Font Foundry), a commercial typeface that cannot be distributed; the switch lets the PDF be published.
+The main text face is [Lexicon No1](https://www.teff.nl/fonts/lexicon/) by Bram de Does (The Enschedé Font Foundry): Roman A for text, Roman D as the bold, Italic A and D for the italics. Lexicon is a commercial typeface used under the project owner's licence; it is not distributed with this repository. When it is not installed, and always for the published PDF, the build uses [XCharter](https://ctan.org/pkg/xcharter), Michael Sharpe's extension of Matthew Carter's Bitstream Charter, released under the SIL Open Font License, Version 1.1, and shipped with TeX Live.
 
 The `fonts/` directory vendors:
 
