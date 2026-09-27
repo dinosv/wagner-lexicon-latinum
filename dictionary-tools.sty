@@ -161,12 +161,31 @@
 % puts every baseline of this page on the same grid as the facing page.
 % The letter sits inside the vbox between \vfil's, so its font metrics
 % cannot leak into the page geometry.
+%
+% TABLE OF CONTENTS: each letter becomes a subsection-level toc entry
+% (and PDF bookmark when hyperref is loaded). If the document defines
+% \dictcorpustitle, the first letter block also files it as the
+% section-level entry above the letters. The anchor and the toc writes
+% sit INSIDE the letter's paragraph: in the vertical list a hyperref
+% anchor would add a box and break the 50pt grid computation above.
+\providecommand{\phantomsection}{}
+\newif\ifdict@corpusintoc
+\newcommand{\dict@tocletter}[1]{%
+  \phantomsection
+  \ifdefined\dictcorpustitle
+    \ifdict@corpusintoc\else
+      \addcontentsline{toc}{section}{\dictcorpustitle}%
+      \global\dict@corpusintoctrue
+      \phantomsection % own anchor: a bookmark may not share its parent's
+    \fi
+  \fi
+  \addcontentsline{toc}{subsection}{#1}}
 \newcommand{\letterheader}[1]{%
   \raggedbottom
   \twocolumn[{%
     \vbox to 50pt{%
       \vfil
-      {\noindent\fontsize{32pt}{32pt}\selectfont #1\par}%
+      {\noindent\fontsize{32pt}{32pt}\selectfont\dict@tocletter{#1}#1\par}%
       \vfil}%
   }]%
   \flushbottom

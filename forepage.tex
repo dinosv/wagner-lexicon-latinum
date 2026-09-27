@@ -1,4 +1,7 @@
 \begin{titlepage}
+    % titlepage resets the counter to 1; the title page is physical
+    % page 3, and hyperref's viewer labels need the true value.
+    \setcounter{page}{3}
     \thispagestyle{empty}
     \centering
     \vspace*{8mm}

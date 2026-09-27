@@ -150,8 +150,28 @@
 % --- DISPLAY HEADINGS ---
 % classicthesis-style: letterspaced lowercase small caps, no bold.
 % Used by the front matter includes and the index heading.
-\newcommand{\ctsection}[1]{%
-  \section*{\normalfont\Large\textls[120]{\scshape\MakeLowercase{#1}}}}
+% The unstarred form also files the heading in the table of contents
+% (and the PDF bookmarks); \ctsection* prints the heading only.
+\NewDocumentCommand{\ctsection}{s m}{%
+  \section*{\normalfont\Large\textls[120]{\scshape\MakeLowercase{#2}}}%
+  \IfBooleanF{#1}{\addcontentsline{toc}{section}%
+    {\texorpdfstring{\MakeLowercase{#2}}{#2}}}}
+
+% --- TABLE OF CONTENTS ---
+% classicthesis idiom: entries in letterspaced lowercase small caps, no
+% bold, no dotted leaders -- the folio follows the title after a fixed
+% 1.5em gap. Letter blocks (filed by \letterheader as subsections) are
+% listed one per line beneath the corpus title, indented 1.5em, each
+% letter in a fixed slot so the folios align.
+\makeatletter
+\renewcommand*{\l@section}[2]{%
+  \par\addvspace{0.5\baselineskip}%
+  {\noindent\textls[80]{\scshape #1}\hspace{1.5em}#2\par}}
+\renewcommand*{\l@subsection}[2]{%
+  {\noindent\hspace*{1.5em}\makebox[1.5em][l]{#1}#2\par}}
+\makeatother
+% Section-level toc entry for the corpus (read by \letterheader)
+\newcommand{\dictcorpustitle}{lexicon}
 
 % --- index ---
 % The generated makeindex section is no longer printed (the historic
@@ -178,6 +198,12 @@
 % classicthesis idiom: no rule under the running head -- words only
 \renewcommand{\headrulewidth}{0pt}
 
+% Clickable table of contents and PDF bookmarks. Loaded last, as
+% hyperref requires; links are invisible (hidelinks) so the printed
+% page is unchanged.
+\usepackage[hidelinks, linktoc=all, bookmarksopen, bookmarksopenlevel=1,
+  pdftitle={Lexicon Latinum --- Corpus Phraseologiæ}]{hyperref}
+
 % here our actual document begins
 % let there be book
 \begin{document}
@@ -196,8 +222,15 @@
 \setcounter{page}{4}
 \include{copyright}
 \include{thanks}
-% Blank verso behind the acknowledgements so the preface opens on a recto.
+% Blank verso behind the acknowledgements so the contents open on a recto.
 \null\thispagestyle{empty}\clearpage
+\thispagestyle{plain}
+\pdfbookmark[1]{Conspectus operis}{conspectus}
+\ctsection*{Conspectus operis}
+\makeatletter\@starttoc{toc}\makeatother
+% The preface opens on a recto: blank verso if the contents end on one.
+\clearpage
+\ifodd\value{page}\else\null\thispagestyle{empty}\clearpage\fi
 \include{foreword}
 % print our abbreviations page
 % The table is a longtable and may span several pages, so \thispagestyle
