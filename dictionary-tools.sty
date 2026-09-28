@@ -3,7 +3,7 @@
 % dictionary-tools.lua (the engine), which this package loads.
 %
 % CONTRACT: the Lua engine emits \printentry, \dictlabel, \dictfr,
-% \letterheader, \entrydone and \index -- every one of them must stay
+% \letterheader, \entrydone, \dictanchor and \index -- every one of them must stay
 % defined here (\index comes from imakeidx).
 %
 % Division of labour: everything the engine's output depends on lives here;
@@ -31,6 +31,19 @@
 \newcommand{\builddictionary}[1]{%
   \directlua{dicttools.process_dictionary_csv("\luaescapestring{#1}")}%
 }
+
+% --- CROSS-REFERENCE LINKS ---
+% \dictanchor{key} marks a headword as a link target (the engine puts it
+% at the start of the entry body, inside the paragraph). \lxlinks{text}
+% hands text to the engine, which wraps each word with a headword anchor
+% in \dictlink{key}{word}; only headwords already built this run link.
+% Both degrade to nothing / plain text when hyperref is not loaded.
+\newcommand{\dictanchor}[1]{%
+  \ifdefined\hypertarget\hypertarget{lx:#1}{}\fi}
+\newcommand{\dictlink}[2]{%
+  \ifdefined\hyperlink\hyperlink{lx:#1}{#2}\else#2\fi}
+\newcommand{\lxlinks}[1]{%
+  \directlua{tex.sprint(dicttools.link_words("\luaescapestring{\detokenize{#1}}"))}}
 
 % --- ENGINE CONFIGURATION ---
 % Custom collation alphabet file (default sortorder.txt). If the file is

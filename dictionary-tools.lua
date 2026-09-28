@@ -10,6 +10,8 @@
 --   \letterheader{letter}
 --   \entrydone
 --   \index{key@word} (imakeidx)
+--   \dictanchor{key} (link target per headword, inside entry bodies)
+--   \dictlink{key}{text} (from link_words, for back-matter indexes)
 --
 -- All functions live on the module table (rather than locals) so test
 -- harnesses can exercise them individually:
@@ -266,6 +268,136 @@ function M.index_key(tokens)
     return table.concat(parts)
 end
 
+-- Cross-reference keys. A headword and a word quoted elsewhere (the
+-- Gallico-Latinus index) meet on a plain-ASCII key: lowercase, quantity
+-- marks dropped, ligatures spelt out, words joined by "-", everything
+-- else (homograph numbers, *, brackets, stops) discarded. "1. ăbĕo" and
+-- "Abeo" both key "abeo"; "ægrē fĕro" keys "aegre-fero".
+M.link_fold = {}
+for base, chars in pairs({
+    a = "āăĀĂ", e = "ēĕĒĔ", i = "īĭĪĬ", o = "ōŏŌŎ", u = "ūŭŪŬ",
+    y = "ȳȲ", ae = "æÆ", oe = "œŒ" }) do
+    for _, c in utf8.codes(chars) do M.link_fold[c] = base end
+end
+
+-- Codepoints that belong to a word for link_words: ASCII letters and the
+-- Latin-1/Extended-A/B letter blocks (not × and ÷).
+local function is_letter(c)
+    return (c >= 65 and c <= 90) or (c >= 97 and c <= 122)
+        or (c >= 0xC0 and c <= 0x24F and c ~= 0xD7 and c ~= 0xF7)
+        or c == 0x306
+end
+
+function M.link_key(s)
+    local out = {}
+    for _, c in utf8.codes(s) do
+        if c >= 97 and c <= 122 then
+            out[#out + 1] = string.char(c)
+        elseif c >= 65 and c <= 90 then
+            out[#out + 1] = string.char(c + 32)
+        elseif M.link_fold[c] then
+            out[#out + 1] = M.link_fold[c]
+        elseif c == 32 or c == 45 then
+            out[#out + 1] = "-"
+        end
+    end
+    local k = table.concat(out):gsub("%-+", "-"):gsub("^%-", ""):gsub("%-$", "")
+    return k
+end
+
+-- Keys that received an anchor during the build (first homograph wins).
+M.link_targets = {}
+
+-- Anchor macros for one headword: the whole headword, plus each variant
+-- of an "X et Y" headword ("ascisco et adscisco").
+function M.anchors_for(word)
+    local parts = { word }
+    if word:find(" et ") then
+        for p in (word .. " et "):gmatch("(.-) et ") do parts[#parts + 1] = p end
+    end
+    local out = {}
+    for _, p in ipairs(parts) do
+        local k = M.link_key(p)
+        if k ~= "" and k:match("^[a-z]") and not M.link_targets[k] then
+            M.link_targets[k] = true
+            out[#out + 1] = "\\dictanchor{" .. k .. "}"
+        end
+    end
+    return table.concat(out)
+end
+
+-- Wrap every word (or run of up to three words, longest first) of a TeX
+-- string that has a headword anchor in \dictlink. Only brace depth 0 is
+-- scanned, so \textit{...} glosses and control-sequence names are left
+-- alone. Words without an anchor pass through untouched.
+function M.link_words(s)
+    -- split into word / other segments
+    local segs, depth, i, n = {}, 0, 1, #s
+    local function push(text, word)
+        local last = segs[#segs]
+        if not word and last and not last.word then
+            last.text = last.text .. text
+        else
+            segs[#segs + 1] = { text = text, word = word }
+        end
+    end
+    while i <= n do
+        local ch = s:sub(i, i)
+        if ch == "\\" then
+            local j = s:find("[^%a]", i + 1) or n + 1
+            if j == i + 1 then j = j + 1 end -- control symbol
+            push(s:sub(i, j - 1), false); i = j
+        elseif ch == "{" then depth = depth + 1; push(ch, false); i = i + 1
+        elseif ch == "}" then depth = depth - 1; push(ch, false); i = i + 1
+        else
+            local c = utf8.codepoint(s, i)
+            local len = #utf8.char(c)
+            if depth == 0 and is_letter(c) then
+                local j = i
+                while j <= n do
+                    local cj = utf8.codepoint(s, j)
+                    if not is_letter(cj) then break end
+                    j = j + #utf8.char(cj)
+                end
+                push(s:sub(i, j - 1), true); i = j
+            else
+                push(s:sub(i, i + len - 1), false); i = i + len
+            end
+        end
+    end
+    local out, k = {}, 1
+    while k <= #segs do
+        local seg, done = segs[k], false
+        if seg.word then
+            for span = 3, 1, -1 do
+                local last = k + 2 * (span - 1)
+                local ok = last <= #segs
+                for m = k + 1, last - 1, 2 do
+                    if not ok or segs[m].text ~= " " or not segs[m + 1].word then
+                        ok = false
+                    end
+                end
+                if ok then
+                    local words, texts = {}, {}
+                    for m = k, last do
+                        texts[#texts + 1] = segs[m].text
+                        if segs[m].word then words[#words + 1] = M.link_key(segs[m].text) end
+                    end
+                    local key = table.concat(words, "-")
+                    if M.link_targets[key] then
+                        out[#out + 1] = "\\dictlink{" .. key .. "}{" .. table.concat(texts) .. "}"
+                        k = last + 1
+                        done = true
+                        break
+                    end
+                end
+            end
+        end
+        if not done then out[#out + 1] = seg.text; k = k + 1 end
+    end
+    return table.concat(out)
+end
+
 -- Main engine pipeline
 function M.process_dictionary_csv(filename)
     local file = io.open(filename, "r")
@@ -286,6 +418,7 @@ function M.process_dictionary_csv(filename)
             if line:gsub("%s+", "") ~= "" then
                 local data = M.parse_csv_line(line)
                 if #data >= 4 then
+                    data.row = #entries + 1
                     table.insert(entries, data)
                 end
             end
@@ -307,7 +440,10 @@ function M.process_dictionary_csv(filename)
                 if ta[i] ~= tb[i] then return ta[i] < tb[i] end
             end
             if #ta ~= #tb then return #ta < #tb end
-            return a[1] < b[1] -- deterministic tie-break
+            if a[1] ~= b[1] then return a[1] < b[1] end
+            -- identical headwords (homographs) keep CSV order: Lua 5.4's
+            -- table.sort picks random pivots and is not stable
+            return a.row < b.row
         end)
     end
 
@@ -346,7 +482,7 @@ function M.process_dictionary_csv(filename)
             return M.format_senses(M.format_inline_labels(
                 M.format_labels(M.format_markup(M.escape_latex(cell)))))
         end
-        local body = rich(e[4])
+        local body = M.anchors_for(e[1]) .. rich(e[4])
         local function seg(label, cell)
             if cell and cell:gsub("%s+", "") ~= "" then
                 body = body .. " " .. label .. " " .. rich(cell)
